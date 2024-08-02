@@ -1,0 +1,37 @@
+[build-system]
+requires = [
+	"setuptools",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-unikorn-openstack-policy"
+description = "Unikorn OpenStack Policy Generator"
+version = "0.1.0"
+readme = "README.md"
+authors = [
+	{ name="The Unikorn Cloud Team" }
+]
+classifiers = [
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = [
+	"oslo.config",
+	"neutron"
+]
+
+[project.urls]
+homepage = "https://github.com/unikorn-cloud/python-unikorn-openstack-policy"
+
+[project.entry-points."oslo.policy.policies"]
+unikorn_openstack_policy = "unikorn_openstack_policy.policy:list_rules"
+
+# vi: ts=4 noet:

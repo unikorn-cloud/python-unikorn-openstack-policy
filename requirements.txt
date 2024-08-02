@@ -1,0 +1,2 @@
+neutron>=24.0.1
+oslo.policy>=4.4.0
