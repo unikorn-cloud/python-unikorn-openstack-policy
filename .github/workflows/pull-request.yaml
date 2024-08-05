@@ -1,0 +1,25 @@
+name: Unikorn Push
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+    - ready_for_review
+jobs:
+  Static:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Install Prerequisites
+      run: pip3 install pylint build
+    - name: Build
+      run: python3 -m build
+    - name: Install
+      # TODO: make this dynamic somehow by reading out from the toml.
+      run: pip3 install --upgrade dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
+    - name: Pylint
+      run: pylint unikorn_openstack_policy
+    - name: Unit Test
+      run: python -m unittest unikorn_openstack_policy/policy_test.py
