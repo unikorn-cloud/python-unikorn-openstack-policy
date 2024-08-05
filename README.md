@@ -15,11 +15,19 @@ Oslo policy generation and testing framework.
 
 ```bash
 python3 -m build
-pip3 install --upgrade dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
+pip3 install dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
 ```
 
 ## Generating Policy Files
 
 ```bash
 oslopolicy-sample-generator --namespace unikorn_openstack_policy
+```
+
+## Coding Standards
+
+You require 10/10 when running:
+
+```bash
+pylint unikorn_openstack_policy
 ```
