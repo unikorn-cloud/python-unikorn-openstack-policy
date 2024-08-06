@@ -18,7 +18,9 @@ Defines Oslo Policy Rules.
 
 # pylint: disable=line-too-long
 
-from neutron.conf.policies import base, network
+import re
+
+from neutron.conf import policies
 from oslo_policy import policy
 
 rules = [
@@ -33,8 +35,8 @@ rules = [
     # A common helper to define that the user is a manager and the resource
     # target is in the same domain as the user is scoped to.
     policy.RuleDefault(
-        name='is_domain_manager_owner',
-        check_str='rule:is_domain_manager and domain_id:%(domain_id)s',
+        name='is_project_manager_owner',
+        check_str='rule:is_domain_manager and project_id:%(project_id)s',
         description='Rule for domain manager ownership',
     ),
 
@@ -44,60 +46,138 @@ rules = [
     # allow provider networks, if the prior rule changes, then we can open up a security hole.
     policy.RuleDefault(
         name='create_network',
-        check_str='rule:is_domain_manager_owner or rule:base_create_network',
+        check_str='rule:is_project_manager_owner or rule:base_create_network',
         description='Create a network',
     ),
     policy.RuleDefault(
         name='delete_network',
-        check_str='rule:is_domain_manager_owner or rule:base_delete_network',
+        check_str='rule:is_project_manager_owner or rule:base_delete_network',
         description='Delete a network',
     ),
     policy.RuleDefault(
         name='create_network:segments',
-        check_str='rule:is_domain_manager_owner or rule:base_create_network:segments',
+        check_str='rule:is_project_manager_owner or rule:base_create_network:segments',
         description='Specify ``segments`` attribute when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:network_type',
-        check_str='rule:is_domain_manager_owner or rule:base_create_network:provider:physical_network',
+        check_str='rule:is_project_manager_owner or rule:base_create_network:provider:physical_network',
         description='Specify ``provider:network_type`` when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:physical_network',
-        check_str='rule:is_domain_manager_owner or rule:base_create_network:provider:network_type',
+        check_str='rule:is_project_manager_owner or rule:base_create_network:provider:network_type',
         description='Specify ``provider:physical_network`` when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:segmentation_id',
-        check_str='rule:is_domain_manager_owner or rule:base_create_network:provider:segmentation_id',
+        check_str='rule:is_project_manager_owner or rule:base_create_network:provider:segmentation_id',
         description='Specify ``provider:segmentation_id`` when creating a network',
     ),
 ]
 
 
-def basify(rule):
-    """Do a copy of the existing rule with a base_ name prefix"""
+class MissingRuleException(Exception):
+    """
+    Raised when a rule cannot be resolved
+    """
 
-    return policy.RuleDefault(
-            name='base_' + rule.name, check_str=rule.check_str, description=rule.description)
+
+def _find_rule(name, rule_list):
+    """Return a named rule if it exists or None"""
+
+    for rule in rule_list:
+        if rule.name == name:
+            return rule
+
+    raise MissingRuleException('unable to resolve referenced rule ' + name)
 
 
-def inherited(rule):
-    """Is the rule inherited by one that we have defined?"""
+def _wrap_check_str(tokens):
+    """If the check string is more than one token, wrap it in parenteses"""
 
-    return any(rule.name == my_rule.name for my_rule in rules)
+    if len(tokens) > 1:
+        tokens.insert(0, '(')
+        tokens.append(')')
+
+    return tokens
+
+
+def _recurse_build_check_str(check_str, rule_list):
+    """
+    Given a check string, this does macro expansion of rule:roo strings
+    removing and inlining them.
+    """
+
+    out = []
+
+    for token in re.split(r'\s+', check_str):
+        if token.isspace():
+            continue
+
+        # Handle leading parentheses.
+        clean = token.lstrip('(')
+        for _ in range(len(token) - len(clean)):
+            out.append('(')
+
+        # Handle trailing parentheses.
+        token = clean
+
+        clean = token.rstrip(')')
+        trail = len(token) - len(clean)
+
+        # If the token is a rule, then expand it.
+        matches = re.match(r'rule:([\w_]+)', clean)
+        if matches:
+            rule = _find_rule(matches.group(1), rule_list)
+            sub_check_str = _recurse_build_check_str(rule.check_str, rule_list)
+            out.extend(_wrap_check_str(sub_check_str))
+        else:
+            out.append(clean)
+
+        for _ in range(trail):
+            out.append(')')
+
+    return out
+
+
+def _build_check_str(check_str, rule_list):
+    """
+    Given a check string, this does macro expansion of rule:roo strings
+    removing and inlining them.
+    """
+
+    check_str = ' '.join(_recurse_build_check_str(check_str, rule_list))
+    check_str = re.sub(r'\( ', '(', check_str)
+    check_str = re.sub(r' \)', ')', check_str)
+    return check_str
 
 
 def list_rules():
     """Implements the "oslo.policy.policies" entry point"""
 
-    # Okay now for the "hard" bit.  We reference built in rules directly from neutron so
-    # we can augment the exact rules for a specific version, thus we pick up any changes.
-    # We prefix the existing rules with "base_" as already seen above but only if they
-    # are redefined (and by implication referenced) from one of ours.
-    network_rules = [basify(rule) for rule in network.list_rules() if inherited(rule)]
+    # For every defined rule, look for a corresponding one sourced directly
+    # from neutron, this means we can augment the exact rule defined for a
+    # specific version of neutron,
+    network_rules = list(policies.list_rules())
 
-    # Those rules will also rely on base rules, so include them too in the final output.
-    return base.list_rules() + network_rules + rules
+    inherited_network_rules = []
+
+    for rule in rules:
+        try:
+            network_rule = _find_rule(rule.name, network_rules)
+
+            check_str = _build_check_str(network_rule.check_str, network_rules)
+
+            inherited_network_rules.append(policy.RuleDefault(
+                name='base_' + rule.name,
+                check_str=check_str,
+                description=rule.description,
+            ))
+        except MissingRuleException:
+            pass
+
+    return inherited_network_rules + rules
+
 
 # vi: ts=4 et:
