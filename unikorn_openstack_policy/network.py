@@ -30,38 +30,46 @@ rules = [
         description='Rule for manager access',
     ),
 
+    # A common helper to define that the user is a manager and the resource
+    # target is in the same domain as the user is scoped to.
+    policy.RuleDefault(
+        name='is_domain_manager_owner',
+        check_str='rule:is_domain_manager and domain_id:%(domain_id)s',
+        description='Rule for domain manager ownership',
+    ),
+
     # The domain manager can create and delete networks in its domain.
     # If the domain manager is able to create a network, it can also create provider networks.
     # Don't be naive enough here to assume the ability to provision a network is enough to
     # allow provider networks, if the prior rule changes, then we can open up a security hole.
     policy.RuleDefault(
         name='create_network',
-        check_str='(rule:is_domain_manager and domain_id:%(domain_id)s) or rule:base_create_network',
+        check_str='rule:is_domain_manager_owner or rule:base_create_network',
         description='Create a network',
     ),
     policy.RuleDefault(
         name='delete_network',
-        check_str='(rule:is_domain_manager and domain_id:%(domain_id)s) or rule:base_delete_network',
+        check_str='rule:is_domain_manager_owner or rule:base_delete_network',
         description='Delete a network',
     ),
     policy.RuleDefault(
         name='create_network:segments',
-        check_str='(rule:is_domain_manager and domain_id:%(domain_id)s) or rule:base_create_network:segments',
+        check_str='rule:is_domain_manager_owner or rule:base_create_network:segments',
         description='Specify ``segments`` attribute when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:network_type',
-        check_str='(rule:is_domain_manager and domain_id:%(domain_id)s) or rule:base_create_network:provider:physical_network',
+        check_str='rule:is_domain_manager_owner or rule:base_create_network:provider:physical_network',
         description='Specify ``provider:network_type`` when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:physical_network',
-        check_str='(rule:is_domain_manager and domain_id:%(domain_id)s) or rule:base_create_network:provider:network_type',
+        check_str='rule:is_domain_manager_owner or rule:base_create_network:provider:network_type',
         description='Specify ``provider:physical_network`` when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:segmentation_id',
-        check_str='(rule:is_domain_manager and domain_id:%(domain_id)s) or rule:base_create_network:provider:segmentation_id',
+        check_str='rule:is_domain_manager_owner or rule:base_create_network:provider:segmentation_id',
         description='Specify ``provider:segmentation_id`` when creating a network',
     ),
 ]

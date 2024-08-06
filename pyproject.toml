@@ -32,6 +32,9 @@ dependencies = [
 homepage = "https://github.com/unikorn-cloud/python-unikorn-openstack-policy"
 
 [project.entry-points."oslo.policy.policies"]
-unikorn_openstack_policy = "unikorn_openstack_policy.policy:list_rules"
+unikorn_openstack_policy = "unikorn_openstack_policy:list_rules"
+
+[project.entry-points."oslo.policy.enforcer"]
+unikorn_openstack_policy = "unikorn_openstack_policy:get_enforcer"
 
 # vi: ts=4 noet:

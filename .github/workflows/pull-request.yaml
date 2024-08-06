@@ -22,4 +22,6 @@ jobs:
     - name: Pylint
       run: pylint unikorn_openstack_policy
     - name: Unit Test
-      run: python -m unittest unikorn_openstack_policy/policy_test.py
+      run: python -m unittest discover
+    - name: Test Generation
+      run: oslopolicy-policy-generator --namespace unikorn_openstack_policy

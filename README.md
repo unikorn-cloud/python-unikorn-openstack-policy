@@ -21,7 +21,7 @@ pip3 install dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
 ## Generating Policy Files
 
 ```bash
-oslopolicy-sample-generator --namespace unikorn_openstack_policy
+oslopolicy-policy-generator --namespace unikorn_openstack_policy
 ```
 
 ## Coding Standards
@@ -30,4 +30,12 @@ You require 10/10 when running:
 
 ```bash
 pylint unikorn_openstack_policy
+```
+
+## Testing
+
+You must test everything works and get 100% pass rate when running:
+
+```bash
+python3 -m unittest discover
 ```
