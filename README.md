@@ -9,7 +9,7 @@ Oslo policy generation and testing framework.
 
 ## Installation
 
-[!NOTE]
+> [!NOTE]
 > Running the following will install all the necessary dependencies.
 > This also includes any commands required for the the following sections.
 
