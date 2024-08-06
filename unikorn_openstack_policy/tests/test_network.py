@@ -1,8 +1,21 @@
+# Copyright 2024 the Unikorn Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Unit tests for OpenStack policies.
 """
 
-import tempfile
 import unittest
 import uuid
 
@@ -10,7 +23,7 @@ from oslo_policy import policy
 from oslo_config import cfg
 from oslo_context.context import RequestContext
 
-from unikorn_openstack_policy.policy import list_rules
+from unikorn_openstack_policy import get_enforcer
 
 class NetworkPolicyTestsBase(unittest.TestCase):
     """
@@ -48,19 +61,8 @@ class NetworkPolicyTestsBase(unittest.TestCase):
         # Setup the configuration, which is required for policy file loading...
         cfg.CONF(args=[])
 
-        # ... which cannot be ignored.
-        with tempfile.NamedTemporaryFile() as policy_file:
-            enforcer = policy.Enforcer(conf=cfg.CONF, policy_file=policy_file.name)
-
-            # Add our default rules to the enforcer, so they get loaded
-            enforcer.register_defaults(list_rules())
-            enforcer.load_rules()
-
-            # Then disable re-reading as the file is about to disappear and the
-            # rules are reloaded on every invocation.
-            enforcer.use_conf = False
-
-            self.enforcer = enforcer
+        self.enforcer = get_enforcer()
+        self.enforcer.load_rules()
 
         # Set up share helper objects.
         self.domain_id = uuid.uuid4().hex
@@ -398,3 +400,5 @@ class DomainMemberNeworkPolicyTests(NetworkPolicyTestsBase):
                 policy.PolicyNotAuthorized,
                 self.enforce,
                 'delete_network', self.target, self.context)
+
+# vi: ts=4 et:
