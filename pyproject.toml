@@ -25,16 +25,19 @@ classifiers = [
 ]
 dependencies = [
 	"oslo.config",
-	"neutron"
+	"neutron",
+	"nova"
 ]
 
 [project.urls]
 homepage = "https://github.com/unikorn-cloud/python-unikorn-openstack-policy"
 
 [project.entry-points."oslo.policy.policies"]
-unikorn_openstack_policy = "unikorn_openstack_policy:list_rules"
+unikorn_openstack_policy_compute = "unikorn_openstack_policy.compute:list_rules"
+unikorn_openstack_policy_network = "unikorn_openstack_policy.network:list_rules"
 
 [project.entry-points."oslo.policy.enforcer"]
-unikorn_openstack_policy = "unikorn_openstack_policy:get_enforcer"
+unikorn_openstack_policy_compute = "unikorn_openstack_policy.compute:get_enforcer"
+unikorn_openstack_policy_network = "unikorn_openstack_policy.network:get_enforcer"
 
 # vi: ts=4 noet:

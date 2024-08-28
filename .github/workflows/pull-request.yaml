@@ -24,4 +24,6 @@ jobs:
     - name: Unit Test
       run: python -m unittest discover
     - name: Test Generation
-      run: oslopolicy-policy-generator --namespace unikorn_openstack_policy
+      run: |
+        oslopolicy-policy-generator --namespace unikorn_openstack_policy_compute
+        oslopolicy-policy-generator --namespace unikorn_openstack_policy_network

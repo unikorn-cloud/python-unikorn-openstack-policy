@@ -71,7 +71,8 @@ pip3 install dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
 ### Generating Policy Files
 
 ```bash
-oslopolicy-policy-generator --namespace unikorn_openstack_policy
+oslopolicy-policy-generator --namespace unikorn_openstack_policy_compute
+oslopolicy-policy-generator --namespace unikorn_openstack_policy_network
 ```
 
 ## Development
