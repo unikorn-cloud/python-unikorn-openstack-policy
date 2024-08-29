@@ -16,110 +16,12 @@
 Unit tests for OpenStack policies.
 """
 
-import unittest
-import uuid
-
-from neutron.conf.policies import base
 from oslo_policy import policy
-from oslo_config import cfg
-from oslo_context.context import RequestContext
 
-from unikorn_openstack_policy import get_enforcer
+from unikorn_openstack_policy import network
+from unikorn_openstack_policy.tests import base
 
-class NetworkPolicyTestsBase(unittest.TestCase):
-    """
-    Base functionality for all suites.
-    """
-
-    # pylint: disable=too-many-instance-attributes
-
-    # This is static across all tests so needs configuring once.
-    enforcer = None
-    # The domain of the user, if scoped to it.
-    domain_id = None
-    # The project of the user, if scoped to it.
-    project_id = None
-    # Project scoped admin context.
-    project_admin_context = None
-    # Project scoped manager context.
-    project_manager_context = None
-    # Project scoped member context.
-    project_member_context = None
-    # Domain scoped admin context.
-    domain_admin_context = None
-    # Domain scoped manager context.
-    domain_manager_context = None
-    # Domain scoped member context.
-    domain_member_context = None
-    # Target that corresponds to the user's scope.
-    target = None
-    # Alternate target that isn't in the user's domain or project.
-    alt_target = None
-
-    def setUp(self):
-        """Perform setup actions for all tests"""
-
-        # Setup the configuration, which is required for policy file loading...
-        cfg.CONF(args=[])
-
-        # We only expose our rules and rules we've directly inherited in the
-        # enforcer defaults, so we need to add any base rules neutrok defines
-        # that the inherited rules also refer to.
-        self.enforcer = get_enforcer()
-        self.enforcer.register_defaults(base.list_rules())
-        self.enforcer.load_rules()
-
-        # Set up share helper objects.
-        self.domain_id = uuid.uuid4().hex
-        self.project_id = uuid.uuid4().hex
-
-        self._setup_project_scoped_personas()
-        self._setup_domain_scoped_personas()
-
-        self.target = {
-                'domain_id': self.domain_id,
-                'project_id': self.project_id,
-        }
-        self.alt_target = {
-                'domain_id': uuid.uuid4().hex,
-                'project_id': uuid.uuid4().hex,
-        }
-
-    def _setup_project_scoped_personas(self):
-        """Create project scoped contexts"""
-        self.project_admin_context = RequestContext(
-                roles=['admin', 'member', 'reader'],
-                project_id=self.project_id)
-        self.project_manager_context = RequestContext(
-                roles=['manager'],
-                project_id=self.project_id)
-        self.project_member_context = RequestContext(
-                roles=['member', 'reader'],
-                project_id=self.project_id)
-
-    def _setup_domain_scoped_personas(self):
-        """Create domain scoped contexts"""
-        self.domain_admin_context = RequestContext(
-                roles=['admin', 'member', 'reader'],
-                domain_id=self.domain_id)
-        self.domain_manager_context = RequestContext(
-                roles=['manager'],
-                domain_id=self.domain_id)
-        self.domain_member_context = RequestContext(
-                roles=['member', 'reader'],
-                domain_id=self.domain_id)
-
-    def enforce(self, action, target, context):
-        """
-        Wraps up common code for enforcement to reduce duplication.
-        """
-
-        rule = policy.RuleCheck('rule', action)
-
-        return self.enforcer.enforce(rule=rule, target=target, creds=context, do_raise=True)
-
-
-class ProjectAdminNeworkPolicyTests(NetworkPolicyTestsBase):
+class ProjectAdminNetworkPolicyTests(base.PolicyTestsBase):
     """
     Checks policy enforcement for project scoped admin role.
     """
@@ -129,7 +31,7 @@ class ProjectAdminNeworkPolicyTests(NetworkPolicyTestsBase):
 
     def setUp(self):
         """Perform setup actions for all tests"""
-        super().setUp()
+        self.setup(network.get_enforcer())
         self.context = self.project_admin_context
 
     def test_create_network(self):
@@ -171,17 +73,17 @@ class ProjectAdminNeworkPolicyTests(NetworkPolicyTestsBase):
         self.assertTrue(self.enforce('delete_network', self.alt_target, self.context))
 
 
-class DomainAdminNeworkPolicyTests(ProjectAdminNeworkPolicyTests):
+class DomainAdminNetworkPolicyTests(ProjectAdminNetworkPolicyTests):
     """
     Checks policy enforcement for domain scoped admin role
     """
 
     def setUp(self):
-        super().setUp()
+        self.setup(network.get_enforcer())
         self.context = self.domain_admin_context
 
 
-class ProjectManagerNetworkPolicyTests(NetworkPolicyTestsBase):
+class ProjectManagerNetworkPolicyTests(base.PolicyTestsBase):
     """
     Checks policy enforcement for project scoped manager role
     """
@@ -191,7 +93,7 @@ class ProjectManagerNetworkPolicyTests(NetworkPolicyTestsBase):
 
     def setUp(self):
         """Perform setup actions for all tests"""
-        super().setUp()
+        self.setup(network.get_enforcer())
         self.context = self.project_manager_context
 
     def test_create_network(self):
@@ -246,14 +148,14 @@ class ProjectManagerNetworkPolicyTests(NetworkPolicyTestsBase):
                 'delete_network', self.alt_target, self.context)
 
 
-class DomainManagerNeworkPolicyTests(NetworkPolicyTestsBase):
+class DomainManagerNetworkPolicyTests(base.PolicyTestsBase):
     """
     Checks policy enforcement for the manager role.
     """
 
     def setUp(self):
         """Perform setup actions for all tests"""
-        super().setUp()
+        self.setup(network.get_enforcer())
         self.context = self.domain_manager_context
 
     def test_create_network(self):
@@ -311,7 +213,6 @@ class DomainManagerNeworkPolicyTests(NetworkPolicyTestsBase):
                 self.enforce,
                 'create_network:provider:segmentation_id', self.alt_target, self.context)
 
-
     def test_delete_network(self):
         """Domain manager cannot delete networks"""
         self.assertRaises(
@@ -324,14 +225,14 @@ class DomainManagerNeworkPolicyTests(NetworkPolicyTestsBase):
                 'delete_network', self.alt_target, self.context)
 
 
-class ProjectMemberNeworkPolicyTests(NetworkPolicyTestsBase):
+class ProjectMemberNetworkPolicyTests(base.PolicyTestsBase):
     """
     Checks policy enforcement for the member role.
     """
 
     def setUp(self):
         """Perform setup actions for all tests"""
-        super().setUp()
+        self.setup(network.get_enforcer())
         self.context = self.project_member_context
 
     def test_create_network(self):
@@ -379,14 +280,14 @@ class ProjectMemberNeworkPolicyTests(NetworkPolicyTestsBase):
                 'delete_network', self.alt_target, self.context)
 
 
-class DomainMemberNeworkPolicyTests(NetworkPolicyTestsBase):
+class DomainMemberNetworkPolicyTests(base.PolicyTestsBase):
     """
     Checks policy enforcement for the member role.
     """
 
     def setUp(self):
         """Perform setup actions for all tests"""
-        super().setUp()
+        self.setup(network.get_enforcer())
         self.context = self.domain_member_context
 
     def test_create_network(self):
