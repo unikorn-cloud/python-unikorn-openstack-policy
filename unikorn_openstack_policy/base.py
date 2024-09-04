@@ -27,7 +27,7 @@ rules = [
     # The domain manager has the role 'manager', as defined by
     # https://docs.scs.community/standards/scs-0302-v1-domain-manager-role/
     policy.RuleDefault(
-        name='is_domain_manager',
+        name='is_manager',
         check_str='role:manager',
         description='Rule for manager access',
     ),
@@ -35,8 +35,8 @@ rules = [
     # A common helper to define that the user is a manager and the resource
     # target is in the same domain as the user is scoped to.
     policy.RuleDefault(
-        name='is_project_manager_owner',
-        check_str='rule:is_domain_manager and project_id:%(project_id)s',
+        name='is_project_manager',
+        check_str='rule:is_manager and project_id:%(project_id)s',
         description='Rule for domain manager ownership',
     ),
 ]

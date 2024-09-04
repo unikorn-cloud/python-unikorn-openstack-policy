@@ -30,34 +30,41 @@ rules = [
     # allow provider networks, if the prior rule changes, then we can open up a security hole.
     policy.RuleDefault(
         name='create_network',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Create a network',
     ),
     policy.RuleDefault(
         name='delete_network',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Delete a network',
     ),
     policy.RuleDefault(
         name='create_network:segments',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Specify ``segments`` attribute when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:network_type',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Specify ``provider:network_type`` when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:physical_network',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Specify ``provider:physical_network`` when creating a network',
     ),
     policy.RuleDefault(
         name='create_network:provider:segmentation_id',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Specify ``provider:segmentation_id`` when creating a network',
     ),
+
+    # The domain manager can update quotas.
+    policy.RuleDefault(
+        name='update_quota',
+        check_str='rule:is_project_manager',
+        description='Update a resource quota',
+    )
 ]
 
 

@@ -28,7 +28,7 @@ rules = [
     # or it won't we able to fulfill any cluster creation requests.
     policy.RuleDefault(
         name='os_compute_api:os-quota-sets:update',
-        check_str='rule:is_project_manager_owner',
+        check_str='rule:is_project_manager',
         description='Update the quotas',
     )
 ]

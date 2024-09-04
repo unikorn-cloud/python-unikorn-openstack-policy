@@ -72,6 +72,11 @@ class ProjectAdminNetworkPolicyTests(base.PolicyTestsBase):
         self.assertTrue(self.enforce('delete_network', self.target, self.context))
         self.assertTrue(self.enforce('delete_network', self.alt_target, self.context))
 
+    def test_update_quotas(self):
+        """Admin can update quotas"""
+        self.assertTrue(self.enforce('update_quota', self.target, self.context))
+        self.assertTrue(self.enforce('update_quota', self.alt_target, self.context))
+
 
 class DomainAdminNetworkPolicyTests(ProjectAdminNetworkPolicyTests):
     """
@@ -140,12 +145,20 @@ class ProjectManagerNetworkPolicyTests(base.PolicyTestsBase):
                 'create_network:provider:segmentation_id', self.alt_target, self.context)
 
     def test_delete_network(self):
-        """Project manager cannot create networks"""
+        """Project manager can create networks"""
         self.assertTrue(self.enforce('delete_network', self.target, self.context))
         self.assertRaises(
                 policy.PolicyNotAuthorized,
                 self.enforce,
                 'delete_network', self.alt_target, self.context)
+
+    def test_update_quotas(self):
+        """Project manager can update quotas"""
+        self.assertTrue(self.enforce('update_quota', self.target, self.context))
+        self.assertRaises(
+            policy.PolicyNotAuthorized,
+            self.enforce,
+            'update_quota', self.alt_target, self.context)
 
 
 class DomainManagerNetworkPolicyTests(base.PolicyTestsBase):
@@ -224,6 +237,17 @@ class DomainManagerNetworkPolicyTests(base.PolicyTestsBase):
                 self.enforce,
                 'delete_network', self.alt_target, self.context)
 
+    def test_update_quotas(self):
+        """Domain manager cannot update quotas"""
+        self.assertRaises(
+            policy.PolicyNotAuthorized,
+            self.enforce,
+            'update_quota', self.target, self.context)
+        self.assertRaises(
+            policy.PolicyNotAuthorized,
+            self.enforce,
+            'update_quota', self.alt_target, self.context)
+
 
 class ProjectMemberNetworkPolicyTests(base.PolicyTestsBase):
     """
@@ -279,6 +303,13 @@ class ProjectMemberNetworkPolicyTests(base.PolicyTestsBase):
                 self.enforce,
                 'delete_network', self.alt_target, self.context)
 
+    def test_update_quotas(self):
+        """Project member cannot update quotas"""
+        self.assertRaises(
+            policy.PolicyNotAuthorized,
+            self.enforce,
+            'update_quota', self.target, self.context)
+
 
 class DomainMemberNetworkPolicyTests(base.PolicyTestsBase):
     """
@@ -326,10 +357,17 @@ class DomainMemberNetworkPolicyTests(base.PolicyTestsBase):
                 'create_network:provider:segmentation_id', self.target, self.context)
 
     def test_delete_network(self):
-        """Project member can delete networks"""
+        """Domain member cannot delete networks"""
         self.assertRaises(
                 policy.PolicyNotAuthorized,
                 self.enforce,
                 'delete_network', self.target, self.context)
+
+    def test_update_quotas(self):
+        """Domain member cannot update quotas"""
+        self.assertRaises(
+            policy.PolicyNotAuthorized,
+            self.enforce,
+            'update_quota', self.target, self.context)
 
 # vi: ts=4 et:
