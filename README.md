@@ -7,45 +7,58 @@
 
 Oslo policy generation and testing framework.
 
+### Compute Service
+
+We need the following to be allowed (non-root):
+
+* Management of quotas
+
 ### Network Service
 
 We need the following to be allowed (non-root):
 
+* Management of quotas
 * Provisioning of provider networks in managed projects
 
-Problem with Neutron is, it has zero view of identity hierarchies.
-When you create a network, for example, it infers the network from the token, and that's it.
-There is no way to infer the domain also and allow access at that level.
-This may, in fact, although not proven, go all the way back to Keystone not encoding this hierarchical information in the token.
-Which then, basically, says that Keystone's encoding of scope in a token is totally stupid in the first place, and should be way more generalized, because having to re-authenticate in multiple scopes is a massive butt pain.
+### Design
 
-Then, after you consider the lack of decent support for scoped policies, there is the fact that provisioning with a specific project ID is not even handled by policies at all, but hard coded, then we are in a world of pain.
+Problem with any service that isn't Keystone is, it has zero view of identity hierarchies.
+When you create a network, for example, it infers the project from the token, and that's it.
+There is no way to infer the domain and allow access at that level.
 
-Our only remaining option is to take our domain admin `manager` role, and create a role on every project we create.
-Then when we want to create a network, we need to create a token bound to that project.
+Our only option is to take our domain admin `manager` role, and apply that role to every project we create and manage.
+Then, when we want to create a network, we need to create a token bound to that project.
 Finally, we need to allow the `manager` to create provider networks in the project.
 
 ## Usage
 
 You first need to create a non-admin role to perform all the necessary actions.
 Unikorn already requires the [SCS domain admin](https://docs.scs.community/standards/scs-0302-v1-domain-manager-role/) functionality for reduced privilege user/project creation, so we use the same role.
+
+The SCS policies limit the roles that can be applied to projects by the manager, and are incompatible with how unikorn needs to work so you will want to update the following line:
+
+```diff
+-"is_domain_managed_role": "'member':%(target.role.name)s or 'load-balancer_member':%(target.role.name)s"+"is_domain_managed_role": "'member':%(target.role.name)s or 'load-balancer_member':%(target.role.name)s or 'manager':%(target.role.name)s"
+```
+
+You may also need to add a `_member_` role if you are using an old version of OpenStack and this is required by Neutron to function.
+
 As an admin account:
 
 ```bash
 openstack role create manager
 ```
 
-Assuming a user has then been created, with the `manager` role on a domain, authenticate as that user scoped to the managed domain, then create a project/user:
+Assuming a `domain-manager` user has then been created in a `managed-domain` domain with the `manager` role on that domain, authenticate as that user scoped to the managed domain, then create a managed project:
 
 ```bash
-openstack project create --domain my-managed-domain my-project
-openstack user create --domain my-managed-domain my-user
+openstack project create --domain managed-domain managed-project
 ```
 
-Then to actually provision a provider network you need to bind the `manager` role to the project:
+Then to actually use the policies defined here you need to bind the `manager` role to the project:
 
 ```bash
-openstack role add --user my-manager-user --domain my-managed-domain --project my-project manager
+openstack role add --user domain-manager--domain managed-domain --project managed-project manager
 ```
 
 At this point, you must have [installed](#installation) the policies we define in this library, though whatever mechanism your orchestration layer provides.
@@ -54,8 +67,6 @@ Re-authenticate as the `manager` user, now scoped to the project, and create the
 ```bash
 openstack network create --provider-network-type vlan --provider-physical-network physnet1 --provider-segment 666 my-provider-network
 ```
-
-Then, after all that, take a step back and assess your life choices and whether you should be using OpenStack in the first place...
 
 ### Installation
 
