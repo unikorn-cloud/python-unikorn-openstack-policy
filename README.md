@@ -38,7 +38,8 @@ Unikorn already requires the [SCS domain admin](https://docs.scs.community/stand
 The SCS policies limit the roles that can be applied to projects by the manager, and are incompatible with how unikorn needs to work so you will want to update the following line:
 
 ```diff
--"is_domain_managed_role": "'member':%(target.role.name)s or 'load-balancer_member':%(target.role.name)s"+"is_domain_managed_role": "'member':%(target.role.name)s or 'load-balancer_member':%(target.role.name)s or 'manager':%(target.role.name)s"
+-"is_domain_managed_role": "'member':%(target.role.name)s or 'load-balancer_member':%(target.role.name)s"
++"is_domain_managed_role": "'member':%(target.role.name)s or 'load-balancer_member':%(target.role.name)s or 'manager':%(target.role.name)s"
 ```
 
 You may also need to add a `_member_` role if you are using an old version of OpenStack and this is required by Neutron to function.
