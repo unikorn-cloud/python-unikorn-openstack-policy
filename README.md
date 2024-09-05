@@ -44,6 +44,10 @@ The SCS policies limit the roles that can be applied to projects by the manager,
 
 You may also need to add a `_member_` role if you are using an old version of OpenStack and this is required by Neutron to function.
 
+[Install](#installation) the policies we define in this library, though whatever mechanism your orchestration layer provides.
+
+### Testing
+
 As an admin account:
 
 ```bash
@@ -59,11 +63,14 @@ openstack project create --domain managed-domain managed-project
 Then to actually use the policies defined here you need to bind the `manager` role to the project:
 
 ```bash
-openstack role add --user domain-manager--domain managed-domain --project managed-project manager
+openstack role add --user domain-manager --domain managed-domain --project managed-project manager
 ```
 
-At this point, you must have [installed](#installation) the policies we define in this library, though whatever mechanism your orchestration layer provides.
-Re-authenticate as the `manager` user, now scoped to the project, and create the network:
+Reauthenticate as the `domain-manager` scoped to the `managed-project` and try creating a provider network, which should succeed.
+
+> [!NOTE]
+> This obviously requires VLAN provider network support by the platform.
+> You may also verify everything works by performing some quota updates.
 
 ```bash
 openstack network create --provider-network-type vlan --provider-physical-network physnet1 --provider-segment 666 my-provider-network
