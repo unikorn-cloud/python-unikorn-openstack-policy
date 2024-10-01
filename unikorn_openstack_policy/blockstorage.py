@@ -18,7 +18,8 @@ Defines Oslo Policy Rules.
 
 # pylint: disable=line-too-long
 
-from nova import policies
+from cinder import policies
+from cinder.policies import quotas
 from oslo_config import cfg
 from oslo_policy import policy
 from unikorn_openstack_policy import base
@@ -27,9 +28,9 @@ rules = [
     # The domain manager needs to be able to alter the default quotas
     # or it won't we able to fulfill any cluster creation requests.
     policy.RuleDefault(
-        name='os_compute_api:os-quota-sets:update',
+        name=quotas.UPDATE_POLICY,
         check_str='rule:is_project_manager',
-        description='Update the compute quotas',
+        description='Update the block storage quotas',
     )
 ]
 

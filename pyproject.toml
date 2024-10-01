@@ -24,19 +24,22 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
 ]
 dependencies = [
-	"oslo.config",
+	"cinder",
 	"neutron",
-	"nova"
+	"nova",
+	"oslo.config",
 ]
 
 [project.urls]
 homepage = "https://github.com/unikorn-cloud/python-unikorn-openstack-policy"
 
 [project.entry-points."oslo.policy.policies"]
+unikorn_openstack_policy_blockstorage = "unikorn_openstack_policy.blockstorage:list_rules"
 unikorn_openstack_policy_compute = "unikorn_openstack_policy.compute:list_rules"
 unikorn_openstack_policy_network = "unikorn_openstack_policy.network:list_rules"
 
 [project.entry-points."oslo.policy.enforcer"]
+unikorn_openstack_policy_blockstorage = "unikorn_openstack_policy.blockstorage:get_enforcer"
 unikorn_openstack_policy_compute = "unikorn_openstack_policy.compute:get_enforcer"
 unikorn_openstack_policy_network = "unikorn_openstack_policy.network:get_enforcer"
 

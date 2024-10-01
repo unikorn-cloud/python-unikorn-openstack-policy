@@ -20,6 +20,12 @@ We need the following to be allowed (non-root):
 * Management of quotas
 * Provisioning of provider networks in managed projects
 
+### Block Storage Service
+
+We need the following to be allowed (non-root):
+
+* Management of quotas
+
 ### Design
 
 Problem with any service that isn't Keystone is, it has zero view of identity hierarchies.
@@ -78,18 +84,25 @@ openstack network create --provider-network-type vlan --provider-physical-networ
 
 ### Installation
 
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip3 install build pylint
+```
+
 > [!NOTE]
 > Running the following will install all the necessary dependencies.
 > This also includes any commands required for the the following sections.
 
 ```bash
 python3 -m build
-pip3 install dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
+pip3 install --force-reinstall dist/python_unikorn_openstack_policy-0.1.0-py3-none-any.whl
 ```
 
 ### Generating Policy Files
 
 ```bash
+oslopolicy-policy-generator --namespace unikorn_openstack_policy_blockstorage
 oslopolicy-policy-generator --namespace unikorn_openstack_policy_compute
 oslopolicy-policy-generator --namespace unikorn_openstack_policy_network
 ```
